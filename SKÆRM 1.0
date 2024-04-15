@@ -29,6 +29,7 @@ MCUFRIEND_kbv tft;
 #define MAGENTA 0xF81F
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
+#define HOTPINK 0xA020F0
 
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
@@ -70,7 +71,7 @@ void readTemperature(float &temperature, int &boxIndex) {
   temperature = random(150, 360) / 10.0; 
 }
 
-void temperature_graph(int sensor_ID) {
+void temperature_graph(int sensor_ID) { /// SE https://www.hackster.io/andreiflorian/tft-graphing-live-history-graphs-744f3b
   background();
   tft.fillRect(260, 210, 55, 25, RED);
   tft.drawRect(260, 210, 55, 25, WHITE);
@@ -84,16 +85,10 @@ void temperature_graph(int sensor_ID) {
   int endX = 310;
   int startY = 10;
   int endY = 200;
-  int numReadings = 50; 
-  float readings[numReadings]; 
   tft.setCursor(startX+100, endY+12);
   tft.setTextColor(WHITE);
   tft.print("Sensor " + String(sensor_ID) );
 
-  
-  for (int i = 0; i < numReadings; i++) {
-    readings[i] = 0;
-  }
 
   // TEGB AKSERNE
   tft.drawLine(startX, startY, startX, endY, WHITE); // Y-axis // x1, y1, x2, y2, color
@@ -108,8 +103,8 @@ void temperature_graph(int sensor_ID) {
   tft.print("Temp (C)");
   tft.setRotation(1);
   tft.setTextSize(1);
-  tft.setCursor(startX+120, endY+4);
-  tft.print("Time (s)");
+  tft.setCursor(startX+125, endY+4);
+  tft.print("Time");
 
   //Tids interval 
   int interval = 100; 
@@ -137,30 +132,6 @@ void temperature_graph(int sensor_ID) {
     if (boxIndex != sensor_ID) {
       continue;
     }
-
-    // Shift array til venstre
-    for (int i = 0; i < numReadings - 1; i++) {
-      readings[i] = readings[i + 1];
-    }
-
-    // Tilføj ny temperatur
-    readings[numReadings - 1] = temp;
-
-    // Fjern gamle linje
-    tft.fillRect(graphX, startY, 2, endY - startY, BLACK);
-
-    // Lav ny linje
-    for (int i = 0; i < numReadings - 1; i++) {
-      int prevX = map(i, 0, numReadings - 1, startX, endX);
-      int nextX = map(i + 1, 0, numReadings - 1, startX, endX);
-      int prevY = map(readings[i], 15, 35, endY, startY);
-      int nextY = map(readings[i + 1], 15, 35, endY, startY);
-
-      tft.drawLine(prevX, prevY, nextX, nextY, BLUE);
-    }
-
-    // Opdater graffens position
-    graphX = (graphX + 2) % endX;
     delay(interval);
   }
 }
@@ -171,7 +142,7 @@ void multiple_temperature_screen(){
   int startY = 10;
   int boxWidth = 40;
   int boxHeight = 40;
-  int gapX = 20;
+  int gapX = 22;
   int gapY = 14; 
   tft.fillRect(260, 200, 55, 35, RED);
   tft.drawRect(260, 200, 55, 35, WHITE);
@@ -193,8 +164,8 @@ void multiple_temperature_screen(){
   }
 
   while(1){
-    int freezing = 19;
-    int hot = 29;
+    int freezing = 16;
+    int hot = 34;
     float temp;
     int boxIndex;
     readTemperature(temp, boxIndex);
@@ -436,17 +407,6 @@ void setup() {
 
   // // Draw a filled triangle
   // tft.fillTriangle(200, 250, 250, 300, 150, 300, CYAN);  // x1, y1, x2, y2, x3, y3, color
-// Draw a button box
-  int buttonX = 100;
-  int buttonY = 100;
-  int buttonWidth = 120;
-  int buttonHeight = 60;
-
-  tft.fillRect(buttonX, buttonY, buttonWidth, buttonHeight, RED);
-  tft.setTextColor(WHITE);
-  tft.setTextSize(2);
-  tft.setCursor(buttonX + 10, buttonY + 10);
-  tft.print("Press Me");
 }
 
 
@@ -456,6 +416,6 @@ void setup() {
 
 void loop() {
   //multiple_temperature_screen();
-  //menu_screen();
-  temperature_graph(1);
+  menu_screen();
+  //temperature_graph(1);
 }
