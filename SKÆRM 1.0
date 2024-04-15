@@ -1,3 +1,6 @@
+int freezing = 16;
+int hot = 34;
+
 #include <stdint.h>
 #include <MCUFRIEND_kbv.h>
 #include <TouchScreen.h>
@@ -30,6 +33,7 @@ MCUFRIEND_kbv tft;
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
 #define HOTPINK 0xA020F0
+#define GRAY 0x808080
 
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
@@ -49,18 +53,123 @@ void background(){
 
 void menu_screen() {
   background();
-  tft.fillRect(45, 40, 230, 50, RED);  // x, y, width, height, color
-  tft.drawRect(45, 40, 230, 50, WHITE);  // x, y, width, height, color
+  ///////////////// ALL SENSORS
+  tft.fillRoundRect(45, 40, 230, 50, 5, RED);  // x, y, width, height, color
+  tft.drawRoundRect(45, 40, 230, 50, 5, WHITE);  // x, y, width, height, color
   tft.setTextColor(WHITE);
   tft.setTextSize(3);
   tft.setCursor(60, 55);
   tft.print("All Sensors");
+  ///////////////// Noget
+  tft.fillRoundRect(45, 100, 230, 50, 5, RED);  // x, y, width, height, r,color
+  tft.drawRoundRect(45, 100, 230, 50, 5, WHITE);  // x, y, width, height, r,color
+  tft.setTextColor(WHITE);
+  tft.setTextSize(3);
+  tft.setCursor(60, 115);
+  tft.print("Something");
+  ///////////////// CONFIG
+  tft.fillRoundRect(45, 160, 230, 50, 5, GRAY);  // x, y, width, height, r,color
+  tft.drawRoundRect(45, 160, 230, 50, 5, WHITE);  // x, y, width, height, r,color
+  tft.setTextColor(WHITE);
+  tft.setTextSize(3);
+  tft.setCursor(110, 175);
+  tft.print("Config");
   while(1){
     TSPoint p = ts.getPoint();
     pinMode(YP, OUTPUT);     //.kbv these pins are shared with TFT
     pinMode(XM, OUTPUT);     //.kbv these pins are shared with TFT
     if (p.z > ts.pressureThreshhold && p.x > 232 && p.x < 829 && p.y > 620 && p.y < 771) { 
         multiple_temperature_screen();
+      }
+    if (p.z > ts.pressureThreshhold && p.x > 232 && p.x < 829 && p.y > 206 && p.y < 357) { 
+        config();
+      }
+    // if (p.z > ts.pressureThreshhold) {
+    //     Serial.print("X = "); Serial.print(p.x);
+    //     Serial.print("\tY = "); Serial.print(p.y);
+    //     Serial.print("\tPressure = "); Serial.println(p.z);
+    // }
+  }
+}
+
+void config() {
+  background();
+  tft.fillRoundRect(260, 210, 55, 25,5, RED);
+  tft.drawRoundRect(260, 210, 55, 25, 5, WHITE);
+  tft.setTextColor(WHITE);
+  tft.setTextSize(2);
+  tft.setCursor(260+5, 210+5);
+  tft.print("Exit");
+  tft.fillRoundRect(1, 1, 319, 75,5, BLACK);  // x, y, width, height, r,color
+  tft.drawRoundRect(1, 1, 319, 75,5, WHITE);  // x, y, width, height, r,color
+  tft.setCursor(10, 10);
+  tft.setTextColor(RED);
+  tft.setTextSize(3);
+  tft.print("MAX");
+  tft.setCursor(255, 10);
+  tft.setTextColor(BLUE);
+  tft.print("MIN");
+  int prev_frez = freezing;
+  int prev_hot = hot;
+  tft.setCursor(20, 40);
+  tft.setTextColor(WHITE);
+  tft.setTextSize(3);
+  tft.print(hot);
+  tft.fillTriangle(80,30,95,5,110,30,WHITE);
+  tft.fillTriangle(80,40,95,65,110,40,WHITE);
+  
+  tft.setCursor(265, 40);
+  tft.setTextColor(WHITE);
+  tft.setTextSize(3);
+  tft.print(freezing);
+  tft.fillTriangle(205,30,220,5,235,30,WHITE);
+  tft.fillTriangle(205,40,220,65,235,40,WHITE);
+  while(1) {
+    TSPoint p = ts.getPoint();
+    pinMode(YP, OUTPUT);     //.kbv these pins are shared with TFT
+    pinMode(XM, OUTPUT);     //.kbv these pins are shared with TFT
+    if (p.z > ts.pressureThreshhold && p.x > 657 && p.x < 746) { 
+      if (p.y > 820 && p.y < 895) {
+        hot = hot +1;
+        tft.fillRoundRect(20, 35, 40, 35,1, BLACK);
+        tft.setCursor(20, 40);
+        tft.setTextColor(WHITE);
+        tft.setTextSize(3);
+        tft.print(hot);
+        delay(300);
+        }
+      else if (p.y > 696 && p.y < 775) {
+        hot = hot - 1;
+        tft.fillRoundRect(20, 35, 40, 35,1, BLACK);
+        tft.setCursor(20, 40);
+        tft.setTextColor(WHITE);
+        tft.setTextSize(3);
+        tft.print(hot);
+        delay(300);
+        }  
+      }
+    else if (p.z > ts.pressureThreshhold && p.x > 328 && p.x < 420) { 
+      if (p.y > 818 && p.y < 887) {
+        freezing = freezing +1;
+        tft.fillRoundRect(265, 35, 40, 35,1, BLACK);
+        tft.setCursor(265, 40);
+        tft.setTextColor(WHITE);
+        tft.setTextSize(3);
+        tft.print(freezing);
+        delay(300);
+      }
+      else if (p.y > 689 && p.y < 770) {
+        freezing = freezing - 1;
+        tft.fillRoundRect(265, 35, 40, 35,1, BLACK);
+        tft.setCursor(265, 40);
+        tft.setTextColor(WHITE);
+        tft.setTextSize(3);
+        tft.print(freezing);
+        delay(300);
+      }
+    }
+    else if (p.z > ts.pressureThreshhold && p.x > 145 && p.x < 264 && p.y > 143 && p.y < 230) {
+        menu_screen();
       }
   }
 }
@@ -73,8 +182,8 @@ void readTemperature(float &temperature, int &boxIndex) {
 
 void temperature_graph(int sensor_ID) { /// SE https://www.hackster.io/andreiflorian/tft-graphing-live-history-graphs-744f3b
   background();
-  tft.fillRect(260, 210, 55, 25, RED);
-  tft.drawRect(260, 210, 55, 25, WHITE);
+  tft.fillRoundRect(260, 210, 55, 25,5, RED);
+  tft.drawRoundRect(260, 210, 55, 25, 5, WHITE);
   tft.setTextColor(WHITE);
   tft.setTextSize(2);
   tft.setCursor(260+5, 210+5);
@@ -85,7 +194,7 @@ void temperature_graph(int sensor_ID) { /// SE https://www.hackster.io/andreiflo
   int endX = 310;
   int startY = 10;
   int endY = 200;
-  tft.setCursor(startX+100, endY+12);
+  tft.setCursor(startX+108, endY+12);
   tft.setTextColor(WHITE);
   tft.print("Sensor " + String(sensor_ID) );
 
@@ -144,50 +253,48 @@ void multiple_temperature_screen(){
   int boxHeight = 40;
   int gapX = 22;
   int gapY = 14; 
-  tft.fillRect(260, 200, 55, 35, RED);
-  tft.drawRect(260, 200, 55, 35, WHITE);
+  tft.fillRoundRect(250, 200, 55, 35,5, RED);
+  tft.drawRoundRect(250, 200, 55, 35,5, WHITE);
   tft.setTextColor(WHITE);
   tft.setTextSize(2);
-  tft.setCursor(260+5, 200+10);
+  tft.setCursor(250+5, 200+10);
   tft.print("Exit");
 
   for (int row = 0; row < 4; row++) {
       for (int col = 0; col < 4; col++) {
           int x = startX + (col * (boxWidth + gapX));
           int y = startY + (row * (boxHeight + gapY));
-          tft.drawRect(x, y, boxWidth, boxHeight, WHITE);
-          tft.setCursor(x-2 , y + boxHeight + 2);
+          tft.drawRoundRect(x, y, boxWidth, boxHeight,5, WHITE);
+          tft.setCursor(x+14 , y + boxHeight + 2);
           tft.setTextColor(WHITE);
           tft.setTextSize(1);
-          tft.print("Sensor " + String(row * 4 + col + 1)+".");
+          tft.print(String(row * 4 + col + 1)+".");
       }
   }
 
   while(1){
-    int freezing = 16;
-    int hot = 34;
     float temp;
     int boxIndex;
     readTemperature(temp, boxIndex);
     int x = startX + ((boxIndex % 4) * (boxWidth + gapX));
     int y = startY + ((boxIndex / 4) * (boxHeight + gapY));
     if (temp > hot) {
-      tft.fillRect(x, y, boxWidth, boxHeight, RED);
-      tft.drawRect(x, y, boxWidth, boxHeight, WHITE);
+      tft.fillRoundRect(x, y, boxWidth, boxHeight,5, RED);
+      tft.drawRoundRect(x, y, boxWidth, boxHeight,5, WHITE);
       tft.setCursor(x + 5, y + boxHeight / 2);
       tft.setTextColor(WHITE);
       tft.setTextSize(1);
       tft.print(String(round(temp * 10) / 10.0,1) + "C");
     } else if (temp < freezing) {
-      tft.fillRect(x, y, boxWidth, boxHeight, BLUE);
-      tft.drawRect(x, y, boxWidth, boxHeight, WHITE);
+      tft.fillRoundRect(x, y, boxWidth, boxHeight,5, BLUE);
+      tft.drawRoundRect(x, y, boxWidth, boxHeight,5, WHITE);
       tft.setCursor(x + 5, y + boxHeight / 2);
       tft.setTextColor(WHITE);
       tft.setTextSize(1);
       tft.print(String(round(temp * 10) / 10.0,1) + "C");
     } else {
-      tft.fillRect(x, y, boxWidth, boxHeight, GREEN); 
-      tft.drawRect(x, y, boxWidth, boxHeight, WHITE);
+      tft.fillRoundRect(x, y, boxWidth, boxHeight,5, GREEN); 
+      tft.drawRoundRect(x, y, boxWidth, boxHeight,5, WHITE);
       tft.setCursor(x + 5, y + boxHeight / 2);
       tft.setTextColor(BLACK);
       tft.setTextSize(1);
@@ -311,7 +418,7 @@ void multiple_temperature_screen(){
 //   int buttonWidth = 120;
 //   int buttonHeight = 60;
 
-//   tft.fillRect(buttonX, buttonY, buttonWidth, buttonHeight, RED);
+//   tft.fillRoundRect(buttonX, buttonY, buttonWidth, buttonHeight,5, RED);
 //   tft.setTextColor(WHITE);
 //   tft.setTextSize(2);
 //   tft.setCursor(buttonX + 10, buttonY + 10);
@@ -385,7 +492,7 @@ void setup() {
   tft.setTextColor(WHITE);  // Set text color to white
   // tft.setTextSize(2);  // Set text size to 2
   // Draw a rectangle
-  // tft.drawRect(50, 50, 100, 60, WHITE);  // x, y, width, height, color
+  // tft.drawRoundRect(50, 50, 100, 60,5, WHITE);  // x, y, width, height, color
 
   // // Draw a filled rectangle
   // tft.fillRect(200, 50, 80, 80, RED);  // x, y, width, height, color
@@ -418,4 +525,5 @@ void loop() {
   //multiple_temperature_screen();
   menu_screen();
   //temperature_graph(1);
+  // config();
 }
