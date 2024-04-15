@@ -1,0 +1,461 @@
+#include <stdint.h>
+#include <MCUFRIEND_kbv.h>
+#include <TouchScreen.h>
+
+#define LCD_CS A3
+#define LCD_CD A2
+#define LCD_WR A1
+#define LCD_RD A0
+#define LCD_RESET A4
+
+MCUFRIEND_kbv tft;
+//240 x 320
+#define TS_MINX 140
+#define TS_MINY 140
+#define TS_MAXX 900	
+#define TS_MAXY 900
+
+#define YP A2
+#define XM A3
+#define YM 8
+#define XP 9
+
+// Color definitions
+#define BLACK   0x0000
+#define BLUE    0x001F
+#define RED     0xF800
+#define GREEN   0x07E0
+#define CYAN    0x07FF
+#define MAGENTA 0xF81F
+#define YELLOW  0xFFE0
+#define WHITE   0xFFFF
+
+TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
+
+int Screen_value = 0;
+
+void background(){
+  tft.fillScreen(BLACK);
+  tft.setTextSize(1);
+  tft.setCursor(0, 230);
+  tft.print("Made by Mattias & Emil");
+}
+
+
+// void something() {
+//   Serial.print("Hello World")
+// }
+
+void menu_screen() {
+  background();
+  tft.fillRect(45, 40, 230, 50, RED);  // x, y, width, height, color
+  tft.drawRect(45, 40, 230, 50, WHITE);  // x, y, width, height, color
+  tft.setTextColor(WHITE);
+  tft.setTextSize(3);
+  tft.setCursor(60, 55);
+  tft.print("All Sensors");
+  while(1){
+    TSPoint p = ts.getPoint();
+    pinMode(YP, OUTPUT);     //.kbv these pins are shared with TFT
+    pinMode(XM, OUTPUT);     //.kbv these pins are shared with TFT
+    if (p.z > ts.pressureThreshhold && p.x > 232 && p.x < 829 && p.y > 620 && p.y < 771) { 
+        multiple_temperature_screen();
+      }
+  }
+}
+
+
+void readTemperature(float &temperature, int &boxIndex) {
+  boxIndex = random(0, 16); 
+  temperature = random(150, 360) / 10.0; 
+}
+
+void temperature_graph(int sensor_ID) {
+  background();
+  tft.fillRect(260, 210, 55, 25, RED);
+  tft.drawRect(260, 210, 55, 25, WHITE);
+  tft.setTextColor(WHITE);
+  tft.setTextSize(2);
+  tft.setCursor(260+5, 210+5);
+  tft.print("Exit");
+
+  //DETTE ER EN TESTER
+  int startX = 10;
+  int endX = 310;
+  int startY = 10;
+  int endY = 200;
+  int numReadings = 50; 
+  float readings[numReadings]; 
+  tft.setCursor(startX+100, endY+12);
+  tft.setTextColor(WHITE);
+  tft.print("Sensor " + String(sensor_ID) );
+
+  
+  for (int i = 0; i < numReadings; i++) {
+    readings[i] = 0;
+  }
+
+  // TEGB AKSERNE
+  tft.drawLine(startX, startY, startX, endY, WHITE); // Y-axis // x1, y1, x2, y2, color
+  tft.drawLine(startX, endY, endX, endY, WHITE); // X-axis // x1, y1, x2, y2, color
+  
+
+  //Tegn labels:
+  tft.setRotation(0);
+  tft.setTextSize(1);
+  tft.setCursor(startX+100, startY-10);
+  tft.setTextColor(WHITE);
+  tft.print("Temp (C)");
+  tft.setRotation(1);
+  tft.setTextSize(1);
+  tft.setCursor(startX+120, endY+4);
+  tft.print("Time (s)");
+
+  //Tids interval 
+  int interval = 100; 
+  int graphX = startX+20;
+  float graphY;
+
+  while (1) {
+    float temp;
+    int boxIndex;
+    readTemperature(temp, boxIndex);
+    boxIndex = boxIndex+1;
+    TSPoint p = ts.getPoint();
+    pinMode(YP, OUTPUT);     //.kbv these pins are shared with TFT
+    pinMode(XM, OUTPUT);     //.kbv these pins are shared with TFT
+
+    if (p.z > ts.pressureThreshhold) {
+        Serial.print("X = "); Serial.print(p.x);
+        Serial.print("\tY = "); Serial.print(p.y);
+        Serial.print("\tPressure = "); Serial.println(p.z);
+    }
+    if (p.z > ts.pressureThreshhold && p.x > 145 && p.x < 264 && p.y > 143 && p.y < 230) {
+        multiple_temperature_screen();
+      }
+
+    if (boxIndex != sensor_ID) {
+      continue;
+    }
+
+    // Shift array til venstre
+    for (int i = 0; i < numReadings - 1; i++) {
+      readings[i] = readings[i + 1];
+    }
+
+    // Tilføj ny temperatur
+    readings[numReadings - 1] = temp;
+
+    // Fjern gamle linje
+    tft.fillRect(graphX, startY, 2, endY - startY, BLACK);
+
+    // Lav ny linje
+    for (int i = 0; i < numReadings - 1; i++) {
+      int prevX = map(i, 0, numReadings - 1, startX, endX);
+      int nextX = map(i + 1, 0, numReadings - 1, startX, endX);
+      int prevY = map(readings[i], 15, 35, endY, startY);
+      int nextY = map(readings[i + 1], 15, 35, endY, startY);
+
+      tft.drawLine(prevX, prevY, nextX, nextY, BLUE);
+    }
+
+    // Opdater graffens position
+    graphX = (graphX + 2) % endX;
+    delay(interval);
+  }
+}
+
+void multiple_temperature_screen(){
+  background();
+  int startX = 10;
+  int startY = 10;
+  int boxWidth = 40;
+  int boxHeight = 40;
+  int gapX = 20;
+  int gapY = 14; 
+  tft.fillRect(260, 200, 55, 35, RED);
+  tft.drawRect(260, 200, 55, 35, WHITE);
+  tft.setTextColor(WHITE);
+  tft.setTextSize(2);
+  tft.setCursor(260+5, 200+10);
+  tft.print("Exit");
+
+  for (int row = 0; row < 4; row++) {
+      for (int col = 0; col < 4; col++) {
+          int x = startX + (col * (boxWidth + gapX));
+          int y = startY + (row * (boxHeight + gapY));
+          tft.drawRect(x, y, boxWidth, boxHeight, WHITE);
+          tft.setCursor(x-2 , y + boxHeight + 2);
+          tft.setTextColor(WHITE);
+          tft.setTextSize(1);
+          tft.print("Sensor " + String(row * 4 + col + 1)+".");
+      }
+  }
+
+  while(1){
+    int freezing = 19;
+    int hot = 29;
+    float temp;
+    int boxIndex;
+    readTemperature(temp, boxIndex);
+    int x = startX + ((boxIndex % 4) * (boxWidth + gapX));
+    int y = startY + ((boxIndex / 4) * (boxHeight + gapY));
+    if (temp > hot) {
+      tft.fillRect(x, y, boxWidth, boxHeight, RED);
+      tft.drawRect(x, y, boxWidth, boxHeight, WHITE);
+      tft.setCursor(x + 5, y + boxHeight / 2);
+      tft.setTextColor(WHITE);
+      tft.setTextSize(1);
+      tft.print(String(round(temp * 10) / 10.0,1) + "C");
+    } else if (temp < freezing) {
+      tft.fillRect(x, y, boxWidth, boxHeight, BLUE);
+      tft.drawRect(x, y, boxWidth, boxHeight, WHITE);
+      tft.setCursor(x + 5, y + boxHeight / 2);
+      tft.setTextColor(WHITE);
+      tft.setTextSize(1);
+      tft.print(String(round(temp * 10) / 10.0,1) + "C");
+    } else {
+      tft.fillRect(x, y, boxWidth, boxHeight, GREEN); 
+      tft.drawRect(x, y, boxWidth, boxHeight, WHITE);
+      tft.setCursor(x + 5, y + boxHeight / 2);
+      tft.setTextColor(BLACK);
+      tft.setTextSize(1);
+      tft.print(String(round(temp * 10) / 10.0,1) + "C");
+    }
+    TSPoint p = ts.getPoint();
+    pinMode(YP, OUTPUT);     //.kbv these pins are shared with TFT
+    pinMode(XM, OUTPUT);     //.kbv these pins are shared with TFT
+
+    if (p.z > ts.pressureThreshhold) {
+        Serial.print("X = "); Serial.print(p.x);
+        Serial.print("\tY = "); Serial.print(p.y);
+        Serial.print("\tPressure = "); Serial.println(p.z);
+    }
+    if (p.z > ts.pressureThreshhold && p.x > 145 && p.x < 264 && p.y > 143 && p.y < 230) {
+        menu_screen();
+      }
+    else if (p.z > ts.pressureThreshhold && p.x > 826 && p.x < 920) { //FØRSTE RÆKKE
+      if (p.y > 752 && p.y < 874) {
+        temperature_graph(1);
+      }
+      if (p.y > 553 && p.y < 689) {
+        temperature_graph(5);
+      }
+      if (p.y > 401 && p.y < 514) {
+        temperature_graph(9);
+      }
+      if (p.y > 208 && p.y < 331) {
+        temperature_graph(13);
+      }
+    }
+    else if (p.z > ts.pressureThreshhold && p.x > 675 && p.x < 766) {  /// ANDEN RÆKKE
+      if (p.y > 752 && p.y < 874) {
+        temperature_graph(2);
+      }
+      if (p.y > 553 && p.y < 689) {
+        temperature_graph(6);
+      }
+      if (p.y > 401 && p.y < 514) {
+        temperature_graph(10);
+      }
+      if (p.y > 208 && p.y < 331) {
+        temperature_graph(14);
+      }
+    }
+    else if (p.z > ts.pressureThreshhold && p.x > 512 && p.x < 607) { //TREDJE RÆKKE
+      if (p.y > 752 && p.y < 874) {
+        temperature_graph(3);
+      }
+      if (p.y > 553 && p.y < 689) {
+        temperature_graph(7);
+      }
+      if (p.y > 401 && p.y < 514) {
+        temperature_graph(11);
+      }
+      if (p.y > 208 && p.y < 331) {
+        temperature_graph(15);
+      }
+    }
+    else if (p.z > ts.pressureThreshhold && p.x > 353 && p.x < 454) { //FJERDE RÆKKE
+      if (p.y > 752 && p.y < 874) {
+        temperature_graph(4);
+      }
+      if (p.y > 553 && p.y < 689) {
+        temperature_graph(8);
+      }
+      if (p.y > 401 && p.y < 514) {
+        temperature_graph(12);
+      }
+      if (p.y > 208 && p.y < 331) {
+        temperature_graph(16);
+      }
+    }
+      if (p.z > ts.pressureThreshhold) {
+        Serial.print("X = "); Serial.print(p.x);
+        Serial.print("\tY = "); Serial.print(p.y);
+        Serial.print("\tPressure = "); Serial.println(p.z);
+    }
+    delay(100);
+  }
+}
+
+
+
+
+
+
+// void menu() {
+//   if (Screen_value == 0) {
+//     menu_screen();
+//   }
+//   else if (Screen_value == 1) {
+//     multiple_temperature_screen();
+//   }
+//   else if (Screen_value == 2) {
+//     single_temperature_screen();
+//   }
+//   else if (Screen_value == 3) {
+//     something();
+//   }
+//   else if (Screen_value == 4) {
+//     something();
+//   }
+// }
+
+
+
+// int Screen = 0;
+
+// void begin_menu_screen() {
+//   // Draw text
+//   background();
+//   tft.setCursor(45, 20);
+//   tft.setTextSize(2);
+//   tft.print("Temperature Reading");  // x, y, text
+
+//   // Draw a line
+//   tft.drawLine(45, 40, 275, 40, WHITE);  // x1, y1, x2, y2, color
+//   int buttonX = 100;
+//   int buttonY = 100;
+//   int buttonWidth = 120;
+//   int buttonHeight = 60;
+
+//   tft.fillRect(buttonX, buttonY, buttonWidth, buttonHeight, RED);
+//   tft.setTextColor(WHITE);
+//   tft.setTextSize(2);
+//   tft.setCursor(buttonX + 10, buttonY + 10);
+//   tft.print("Press Me");
+//   while(true) {
+//     TSPoint p = ts.getPoint();
+    // if (p.z > ts.pressureThreshhold) {
+    //   Serial.print("X = "); Serial.print(p.x);
+    //   Serial.print("\tY = "); Serial.print(p.y);
+    //   Serial.print("\tPressure = "); Serial.println(p.z);
+//     }
+//     if (p.z > ts.pressureThreshhold) {  // Check if the touchscreen is pressed
+//       if (p.x > 384 && p.x < 695 && p.y > 384 && p.y < 582) {  // Check if the touch is within the button region
+//         // Clear the screen and go to a different page
+//         begin_temperature_display();
+//           // Delay to prevent rapid screen changes due to multiple touch readings
+//       }
+//     }
+//     delay(100);
+//   }
+// }
+
+
+
+
+// void begin_temperature_display() {
+//   tft.fillScreen(BLACK);
+//   // Draw text
+//   tft.setCursor(45, 20);
+//   tft.setTextSize(2);
+//   tft.print("Temperature 1");  // x, y, text
+
+//   // Draw a line
+//   //tft.drawLine(45, 40, 275, 40, WHITE);  // x1, y1, x2, y2, color
+//     // New loop for temperature display
+//   bool exitFlag = false;
+//   while (!exitFlag) {
+//     TSPoint p = ts.getPoint();
+//     if (p.z > ts.pressureThreshhold) {
+//       Serial.print("X = "); Serial.print(p.x);
+//       Serial.print("\tY = "); Serial.print(p.y);
+//       Serial.print("\tPressure = "); Serial.println(p.z);
+//     }
+    // if (p.x > 0 && p.x < 320 && p.y > 0 && p.y < 240) {  // Touch inside the top-left circle to exit
+    //     exitFlag = true;
+    //   }
+//     // Read temperature (replace this with your actual temperature reading code)
+//     float temperature = readTemperature();
+
+//     // Display temperature on screen
+//     tft.setCursor(100, 100);
+//     tft.setTextSize(3);
+//     tft.print("Temperature: ");
+//     tft.print(temperature);
+//     tft.print("°C");
+
+//     // Add some delay to prevent rapid screen updates
+//     delay(100);
+//   }
+// }
+
+void setup() {
+  Serial.begin(9600);
+
+  uint16_t ID = tft.readID();
+  tft.begin(ID);
+
+  tft.setRotation(1);  // Landscape orientation
+  
+  tft.fillScreen(BLUE);  // Fill screen with blue color
+  tft.setTextColor(WHITE);  // Set text color to white
+  // tft.setTextSize(2);  // Set text size to 2
+  // Draw a rectangle
+  // tft.drawRect(50, 50, 100, 60, WHITE);  // x, y, width, height, color
+
+  // // Draw a filled rectangle
+  // tft.fillRect(200, 50, 80, 80, RED);  // x, y, width, height, color
+
+  // // Draw a circle
+  // tft.drawCircle(0, 0, 30, BLACK);  // x, y, radius, color
+
+  // // Draw a filled circle
+  // tft.fillCircle(0, 0, 25, YELLOW);  // x, y, radius, color
+
+  //   // Draw a circle
+  // tft.drawCircle(320, 240, 30, BLACK);  // x, y, radius, color
+
+  // // Draw a filled circle
+  // tft.fillCircle(320, 240, 25, YELLOW);  // x, y, radius, color
+
+  // // Draw a triangle
+  // tft.drawTriangle(50, 250, 100, 300, 0, 300, MAGENTA);  // x1, y1, x2, y2, x3, y3, color
+
+  // // Draw a filled triangle
+  // tft.fillTriangle(200, 250, 250, 300, 150, 300, CYAN);  // x1, y1, x2, y2, x3, y3, color
+// Draw a button box
+  int buttonX = 100;
+  int buttonY = 100;
+  int buttonWidth = 120;
+  int buttonHeight = 60;
+
+  tft.fillRect(buttonX, buttonY, buttonWidth, buttonHeight, RED);
+  tft.setTextColor(WHITE);
+  tft.setTextSize(2);
+  tft.setCursor(buttonX + 10, buttonY + 10);
+  tft.print("Press Me");
+}
+
+
+
+
+
+
+void loop() {
+  //multiple_temperature_screen();
+  //menu_screen();
+  temperature_graph(1);
+}
