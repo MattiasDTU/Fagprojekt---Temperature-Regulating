@@ -4,7 +4,7 @@ float hot = 34.0;
 #include <stdint.h>
 #include <MCUFRIEND_kbv.h>
 #include <TouchScreen.h>
-
+////////////// Settings for skærm
 #define LCD_CS A3
 #define LCD_CD A2
 #define LCD_WR A1
@@ -22,7 +22,8 @@ MCUFRIEND_kbv tft;
 #define XM A3
 #define YM 8
 #define XP 9
-/////////////7FARVER
+TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
+/////////////FARVER
 #define BLACK       0x0000
 #define BLUE        0x001F
 #define RED         0xF800
@@ -46,14 +47,12 @@ MCUFRIEND_kbv tft;
 #define DARKGRAY 0x8410
 #define GRAY 0x808080
 
+
+// Farve Konstanter
 int freeze_color = BLUE;
 int hot_color = RED;
 int normal_color = GREEN;
 int graph_color = CYAN;
-#define FREEZE freeze_color
-#define HOT hot_color
-
-TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 
 void background(){
@@ -62,8 +61,6 @@ void background(){
   tft.setCursor(0, 230);
   tft.print("Made by Mattias & Emil");
 }
-
-
 void exit_button() {
   tft.fillRoundRect(260+2, 210+2, 55, 25,5, WHITE);
   tft.fillRoundRect(260, 210, 55, 25,5, RED);
@@ -89,7 +86,6 @@ void sensor_boxes(int startX, int startY, int boxWidth, int boxHeight, int gapX,
       }
   }
 }
-
 void text(const char* text, int x, int y,int size, int color1, int color2 ) {
   tft.setTextSize(size);
   tft.setTextColor(color1);
@@ -108,7 +104,6 @@ void number(float number, int x, int y,int size, int color1, int color2 ) {
   tft.setCursor(x, y);
   tft.print(number,1);
 }
-
 void menu_screen() {
   background();
   ///////////////// ALL SENSORS
@@ -143,7 +138,6 @@ void menu_screen() {
     // }
   }
 }
-
 void color_window(const char* setting) {
     tft.fillRoundRect(5, 5, 280,230,5, DARKGRAY);  // x, y, width, height, r,color
     tft.drawRoundRect(5, 5, 280, 230,5, WHITE);
@@ -577,7 +571,6 @@ void color_window(const char* setting) {
     }
     }
 }
-
 void config() {
   background();
   ///// Øverste temperatur config 
@@ -680,13 +673,10 @@ void config() {
 
   }
 }
-
-
 void readTemperature(float &temperature, int &boxIndex) {
   boxIndex = random(0, 16); 
   temperature = random(150, 360) / 10.0; 
 }
-
 void temperature_graph(int sensor_ID) { /// SE https://www.hackster.io/andreiflorian/tft-graphing-live-history-graphs-744f3b
   background();
   exit_button();
@@ -746,7 +736,6 @@ void temperature_graph(int sensor_ID) { /// SE https://www.hackster.io/andreiflo
     delay(interval);
   }
 }
-
 void multiple_temperature_screen(){
   background();
   int startX = 10;
@@ -865,7 +854,6 @@ void multiple_temperature_screen(){
     delay(100);
   }
 }
-
 void setup() {
   Serial.begin(9600);
 
@@ -901,12 +889,6 @@ void setup() {
   // // Draw a filled triangle
   // tft.fillTriangle(200, 250, 250, 300, 150, 300, CYAN);  // x1, y1, x2, y2, x3, y3, color
 }
-
-
-
-
-
-
 void loop() {
   //multiple_temperature_screen();
   menu_screen();
