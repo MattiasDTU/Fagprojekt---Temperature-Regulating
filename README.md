@@ -1,5 +1,5 @@
 # **Project Description**: Temperature Regulator for School Project
-This project involves the design and implementation of a temperature regulator as part of a school assignment. The primary objective is to create a system that can accurately monitor and control the temperature within a specified environment.
+This project involves the design and implementation of a temperature regulator as part of a school assignment. The primary objective is to create a system that can accurately monitor and control the temperature within a specified environment. The project should be able to run on any computer that uses Arduino IDE.
 
 ## **Key Features**:
 
