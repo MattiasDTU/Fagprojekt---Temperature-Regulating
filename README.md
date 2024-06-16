@@ -3,7 +3,7 @@ This project involves the design and implementation of a temperature regulator a
 
 ## **Key Features**:
 
-**Temperature Monitoring:** Utilizes LM35 sensors to continuously measure the ambient temperature. 
+**Temperature Monitoring:** Utilizes LM35 sensors to continuously measure the ambient temperature of a radiometer. 
 
 **Control Mechanism:** Integrates a microcontroller *(Arduino Mega)* to process sensor data and adjust heating or cooling circuits accordingly, through the use of PWM-signals.
 
