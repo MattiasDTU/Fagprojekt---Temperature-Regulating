@@ -12,3 +12,5 @@ This project involves the design and implementation of a temperature regulator a
 **Energy Efficiency:** Optimized to maintain temperature with minimal energy consumption. This is made possible through a custom made algorithm.
 
 This project aims to provide a practical solution for maintaining consistent temperatures, demonstrating fundamental principles of electronics, programming, and system integration.
+
+This project has been made by Mattias and Emil from DTU.
